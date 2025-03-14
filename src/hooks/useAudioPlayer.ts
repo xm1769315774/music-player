@@ -1,10 +1,11 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { useMusicContext } from '../contexts/MusicContext';
 
-export const useAudioPlayer = () => {
+export const useAudioPlayer = (autoplay = false) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const { state, dispatch } = useMusicContext();
   const { playlist, currentIndex, playing, playMode, randomOrder } = state;
+  const isFirstLoad = useRef(true);
 
   const handlePlayError = useCallback((error: Error) => {
     console.error('播放失败:', error);
@@ -101,10 +102,25 @@ export const useAudioPlayer = () => {
       if (!isNaN(duration) && isFinite(duration) && duration > 0) {
         dispatch({ type: 'SET_DURATION', payload: duration });
         dispatch({ type: 'SET_SONG_DURATION', payload: { url: audioRef.current.src, duration } });
+        dispatch({ type: 'SET_LOADING', payload: false });
+        if (isFirstLoad.current && autoplay) {
+          isFirstLoad.current = false;
+          // 确保音频已经准备好可以播放
+          if (audioRef.current.readyState >= 3) {
+            playAudio();
+          } else {
+            const waitForReady = () => {
+              if (audioRef.current && audioRef.current.readyState >= 3) {
+                playAudio();
+              } else if (audioRef.current) {
+                setTimeout(waitForReady, 100);
+              }
+            };
+            waitForReady();
+          }
+        }
       } else {
-        // 如果获取不到有效时长，设置加载状态
         dispatch({ type: 'SET_LOADING', payload: true });
-        // 尝试重新获取时长
         const checkDuration = () => {
           if (audioRef.current) {
             const newDuration = audioRef.current.duration;
@@ -112,23 +128,35 @@ export const useAudioPlayer = () => {
               dispatch({ type: 'SET_DURATION', payload: newDuration });
               dispatch({ type: 'SET_SONG_DURATION', payload: { url: audioRef.current.src, duration: newDuration } });
               dispatch({ type: 'SET_LOADING', payload: false });
+              if (isFirstLoad.current && autoplay) {
+                isFirstLoad.current = false;
+                // 确保音频已经准备好可以播放
+                if (audioRef.current.readyState >= 3) {
+                  playAudio();
+                } else {
+                  const waitForReady = () => {
+                    if (audioRef.current && audioRef.current.readyState >= 3) {
+                      playAudio();
+                    } else if (audioRef.current) {
+                      setTimeout(waitForReady, 100);
+                    }
+                  };
+                  waitForReady();
+                }
+              }
             } else if (audioRef.current.readyState < 4) {
-              // 如果音频还未完全加载，继续等待
               setTimeout(checkDuration, 100);
             } else {
-              // 如果加载完成仍仍无法获取时长，设置默认值
               dispatch({ type: 'SET_DURATION', payload: 0 });
               dispatch({ type: 'SET_LOADING', payload: false });
+              dispatch({ type: 'SET_ERROR', payload: '音频加载失败，请检查音频文件是否可用' });
             }
           }
         };
         checkDuration();
       }
-      if (!playing && audioRef.current.autoplay) {
-        playAudio();
-      }
     }
-  }, [dispatch, playing, playAudio]);
+  }, [dispatch, autoplay, playAudio]);
 
   const handleEnded = useCallback(() => {
     if (playMode === 'single') {
@@ -172,75 +200,72 @@ export const useAudioPlayer = () => {
 
   const switchToSong = useCallback((targetIndex: number) => {
     if (audioRef.current) {
-      audioRef.current.pause();
+      const oldAudio = audioRef.current;
+      oldAudio.pause();
+      oldAudio.src = '';
+      oldAudio.removeEventListener('timeupdate', handleTimeUpdate);
+      oldAudio.removeEventListener('ended', handleEnded);
+      oldAudio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      oldAudio.load();
+
       dispatch({ type: 'SET_PLAYING', payload: false });
       dispatch({ type: 'SET_CURRENT_INDEX', payload: targetIndex });
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
-      // 移除之前的事件监听器
-      const oldAudio = audioRef.current;
+      oldAudio.volume = state.volume;
+      oldAudio.preload = 'auto';
+      oldAudio.src = playlist[targetIndex].url;
 
-      // 预加载当前歌曲
-      preloadAudio(playlist[targetIndex].url)
-        .then((newAudio) => {
-          // 设置音频属性
-          newAudio.volume = state.volume;
-          audioRef.current = newAudio;
+      oldAudio.addEventListener('timeupdate', handleTimeUpdate);
+      oldAudio.addEventListener('ended', handleEnded);
+      oldAudio.addEventListener('loadedmetadata', handleLoadedMetadata);
 
-          // 添加事件监听
-          newAudio.addEventListener('timeupdate', handleTimeUpdate);
-          newAudio.addEventListener('ended', handleEnded);
+      let retryCount = 0;
+      const maxRetries = 3;
 
-          let retryCount = 0;
-          const maxRetries = 3;
+      const tryPlay = () => {
+        if (audioRef.current) {
+          const currentAudio = audioRef.current;
+          currentAudio.play().then(() => {
+            if (audioRef.current === currentAudio) {
+              dispatch({ type: 'SET_PLAYING', payload: true });
+              dispatch({ type: 'SET_LOADING', payload: false });
+              dispatch({ type: 'SET_ERROR', payload: null });
 
-          const tryPlay = () => {
-            if (audioRef.current) {
-              audioRef.current.play().then(() => {
-                dispatch({ type: 'SET_PLAYING', payload: true });
-                dispatch({ type: 'SET_LOADING', payload: false });
-                dispatch({ type: 'SET_ERROR', payload: null });
-
-                // 预加载下一首歌曲
-                const nextIndex = (targetIndex + 1) % playlist.length;
-                preloadAudio(playlist[nextIndex].url).catch(() => { });
-              }).catch((error) => {
-                if (error.name === 'NotAllowedError') {
-                  dispatch({ type: 'SET_ERROR', payload: '需要点击页面任意位置来开始播放' });
-                  const handleFirstInteraction = () => {
-                    tryPlay();
-                    document.removeEventListener('click', handleFirstInteraction);
-                    document.removeEventListener('touchstart', handleFirstInteraction);
-                  };
-                  document.addEventListener('click', handleFirstInteraction);
-                  document.addEventListener('touchstart', handleFirstInteraction);
-                } else if (retryCount < maxRetries) {
-                  retryCount++;
-                  dispatch({ type: 'SET_ERROR', payload: `加载失败，正在重试 (${retryCount}/${maxRetries})` });
-                  setTimeout(tryPlay, 1000);
-                } else {
-                  handlePlayError(error);
-                }
-              });
+              const nextIndex = (targetIndex + 1) % playlist.length;
+              preloadAudio(playlist[nextIndex].url).catch(() => { });
             }
-          };
+          }).catch((error) => {
+            if (error.name === 'NotAllowedError') {
+              dispatch({ type: 'SET_ERROR', payload: '需要点击页面任意位置来开始播放' });
+              const handleFirstInteraction = () => {
+                if (audioRef.current === currentAudio) {
+                  tryPlay();
+                }
+                document.removeEventListener('click', handleFirstInteraction);
+                document.removeEventListener('touchstart', handleFirstInteraction);
+              };
+              document.addEventListener('click', handleFirstInteraction);
+              document.addEventListener('touchstart', handleFirstInteraction);
+            } else if (retryCount < maxRetries) {
+              retryCount++;
+              dispatch({ type: 'SET_ERROR', payload: `加载失败，正在重试 (${retryCount}/${maxRetries})` });
+              setTimeout(() => {
+                if (audioRef.current === currentAudio) {
+                  tryPlay();
+                }
+              }, 1000);
+            } else {
+              handlePlayError(error);
+            }
+          });
+        }
+      };
 
-          tryPlay();
-        })
-        .catch((error) => {
-          handlePlayError(error);
-          dispatch({ type: 'SET_LOADING', payload: false });
-        });
-
-      // 清理旧的音频元素
-      oldAudio.pause();
-      oldAudio.src = '';
-      oldAudio.removeEventListener('timeupdate', handleTimeUpdate);
-      oldAudio.removeEventListener('ended', handleEnded);
-      oldAudio.load();
+      tryPlay();
     }
-  }, [playlist, dispatch, handlePlayError, state.volume, preloadAudio, handleTimeUpdate, handleEnded]);
+  }, [playlist, dispatch, handlePlayError, state.volume, handleTimeUpdate, handleEnded, handleLoadedMetadata]);
 
   const playNext = useCallback(() => {
     let nextIndex;

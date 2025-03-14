@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import dts from 'vite-plugin-dts'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
+import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -12,6 +13,7 @@ const __dirname = dirname(__filename)
 export default defineConfig({
   plugins: [
     react(),
+    cssInjectedByJsPlugin(),
     dts({
       rollupTypes: true,
       include: ['src/**/*'],
@@ -26,6 +28,11 @@ export default defineConfig({
     },
     postcss: {
       plugins: [tailwindcss, autoprefixer]
+    },
+    preprocessorOptions: {
+      less: {
+        javascriptEnabled: true
+      }
     }
   },
   build: {
@@ -53,9 +60,12 @@ export default defineConfig({
           react: 'React',
           'react-dom': 'ReactDOM'
         },
-        assetFileNames: 'style.css',
-        sourcemap: true
-      },
-    },
+        inlineDynamicImports: true,
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.css')) return 'styles/[name]-[hash].css';
+          return 'assets/[name]-[hash][extname]';
+        }
+      }
+    }
   },
 })

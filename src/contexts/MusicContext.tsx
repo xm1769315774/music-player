@@ -22,6 +22,15 @@ type NormalizedSong = {
   theme?: string;
 }
 
+const normalizeSong = (song: Song): NormalizedSong => ({
+  name: song.name || song.title || 'Unknown',
+  artist: song.artist || song.author || 'Unknown',
+  url: song.url,
+  cover: song.cover || song.pic || '',
+  lrc: song.lrc,
+  theme: song.theme
+});
+
 interface MusicState {
   playlist: Song[];
   currentIndex: number;
@@ -54,13 +63,7 @@ type MusicAction =
   | { type: 'SET_SONG_DURATION'; payload: { url: string; duration: number } };
 
 const initialState: MusicState = {
-  playlist: songs.map(song => ({
-    name: song.name || song.title || '',
-    artist: song.artist || song.author || '',
-    url: song.url,
-    cover: song.cover || song.pic || '',
-    lrc: song.lrc
-  })) as NormalizedSong[],
+  playlist: songs.map(normalizeSong) as NormalizedSong[],
   currentIndex: 0,
   playing: false,
   currentTime: 0,

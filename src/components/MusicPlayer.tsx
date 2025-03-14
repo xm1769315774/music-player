@@ -7,7 +7,7 @@ import { useMusicContext } from '../contexts/MusicContext';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 
 interface MusicPlayerProps {
-  audio?: {
+  audio: {
     name: string;
     artist: string;
     url: string;
@@ -26,6 +26,8 @@ interface MusicPlayerProps {
   order?: 'list' | 'random';
   preload?: 'auto' | 'metadata' | 'none';
 }
+
+export type { MusicPlayerProps };
 
 export const MusicPlayer: React.FC<MusicPlayerProps> = ({
   preload = 'auto',
@@ -63,7 +65,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
     handleEnded,
     switchToSong,
     retryPlay
-  } = useAudioPlayer();
+  } = useAudioPlayer(autoplay);
 
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
@@ -99,13 +101,6 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
     dispatch({ type: 'TOGGLE_PLAYLIST' });
   }, [dispatch]);
 
-  const toggleView = useCallback(() => {
-    dispatch({
-      type: 'SET_CURRENT_VIEW',
-      payload: currentView === 'cover' ? 'lyrics' : 'cover'
-    });
-  }, [currentView, dispatch]);
-
   useEffect(() => {
     const handleViewChange = (e: CustomEvent<{ direction: 'left' | 'right' }>) => {
       dispatch({
@@ -139,7 +134,6 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
-        autoPlay={autoplay}
       />
       <div className="flex flex-col p-4 space-y-4">
         <div
@@ -174,7 +168,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
                 className="w-full h-full object-cover rounded-lg"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = 'https://via.placeholder.com/400x400?text=No+Image';
+                  target.src = '/src/assets/default-cover.jpg';
                 }}
               />
             </div>
