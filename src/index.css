@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #1890ff;
+  --secondary: #f5f5f5;
+  --accent: #ff4d4f;
+  --neutral: #8c8c8c;
+  --base-100: #ffffff;
+}
+
+@layer components {
+  .player-container {
+    @apply w-full max-w-3xl mx-auto bg-base-100 rounded-lg shadow-lg;
+  }
+
+  .player-controls {
+    @apply flex items-center justify-between p-4;
+  }
+
+  .player-button {
+    @apply btn btn-circle btn-ghost;
+  }
+
+  .player-progress {
+    @apply w-full h-2 bg-secondary rounded-full cursor-pointer;
+  }
+
+  .player-progress-bar {
+    @apply h-full bg-primary rounded-full transition-all;
+  }
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
