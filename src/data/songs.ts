@@ -21,11 +21,11 @@ export const songs: Song[] = [
     lrc: "https://api.i-meto.com/meting/api?server=netease&type=lrc&id=2013978728&auth=96a8b036d3476be1c7b37dbf37174308b9fcecc1"
   },
   {
-    title: "手扶拖拉机斯基",
-    author: "张蔷",
-    url: "https://api.i-meto.com/meting/api?server=tencent&type=url&id=001z9lAz1dL98r&auth=7632a6f5a3d332677de060c14b4ab651db13eec1",
-    pic: "https://api.i-meto.com/meting/api?server=tencent&type=pic&id=002TpJp33YuXFn&auth=c93a4fb35c9c7fe3b3989f860d149444f53d7fd3",
-    lrc: "https://api.i-meto.com/meting/api?server=tencent&type=lrc&id=001z9lAz1dL98r&auth=9fb3b0efd7429e4f693685dce107bea39a121d16"
+    "title": "lovely",
+    "author": "Billie Eilish / Khalid",
+    "url": "https://api.i-meto.com/meting/api?server=netease&type=url&id=563586077&auth=29a46a9f6af178a770b5865bf2b9a5b684431c1a",
+    "pic": "https://api.i-meto.com/meting/api?server=netease&type=pic&id=109951165994333268&auth=4d8ae05005213e4fa039c92082e6d39db45b794a",
+    "lrc": "https://api.i-meto.com/meting/api?server=netease&type=lrc&id=563586077&auth=9c854e5ce846b3c37ceb846c6e61e87498997976"
   },
   {
     title: "西海情歌",

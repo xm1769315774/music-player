@@ -31,52 +31,68 @@ const normalizeSong = (song: Song): NormalizedSong => ({
   theme: song.theme
 });
 
+export type PlayMode = 'list' | 'random' | 'single';
+
+const CONTROL_LAYOUTS = ['normal', 'floating'] as const;
+export type ControlLayout = (typeof CONTROL_LAYOUTS)[number];
+
 interface MusicState {
-  playlist: Song[];
+  playlist: NormalizedSong[];
   currentIndex: number;
   playing: boolean;
   currentTime: number;
   duration: number;
   volume: number;
-  playMode: 'list' | 'random' | 'single';
-  randomOrder: number[];
+  playMode: PlayMode;
   showPlaylist: boolean;
   currentView: 'cover' | 'lyrics';
-  error: string | null;
+  controlLayout: ControlLayout;
   loading: boolean;
-  songDurations: { [key: string]: number };
+  error: string | null;
+  songDurations: Record<string, number>;
+  randomOrder: number[];
 }
 
 type MusicAction =
-  | { type: 'SET_PLAYLIST'; payload: Song[] }
+  | { type: 'SET_PLAYLIST'; payload: MusicState['playlist'] }
   | { type: 'SET_CURRENT_INDEX'; payload: number }
   | { type: 'SET_PLAYING'; payload: boolean }
   | { type: 'SET_CURRENT_TIME'; payload: number }
   | { type: 'SET_DURATION'; payload: number }
   | { type: 'SET_VOLUME'; payload: number }
-  | { type: 'SET_PLAY_MODE'; payload: 'list' | 'random' | 'single' }
-  | { type: 'SET_RANDOM_ORDER'; payload: number[] }
+  | { type: 'SET_PLAY_MODE'; payload: PlayMode }
   | { type: 'TOGGLE_PLAYLIST' }
   | { type: 'SET_CURRENT_VIEW'; payload: 'cover' | 'lyrics' }
-  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_CONTROL_LAYOUT'; payload: ControlLayout }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_SONG_DURATION'; payload: { url: string; duration: number } };
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_SONG_DURATION'; payload: { url: string; duration: number } }
+  | { type: 'SET_RANDOM_ORDER'; payload: number[] };
 
 const initialState: MusicState = {
-  playlist: songs.map(normalizeSong) as NormalizedSong[],
+  playlist: songs.map(normalizeSong),
   currentIndex: 0,
   playing: false,
   currentTime: 0,
   duration: 0,
-  volume: 0.7,
+  volume: 1,
   playMode: 'list',
-  randomOrder: [],
   showPlaylist: false,
   currentView: 'cover',
-  error: null,
+  controlLayout: 'normal',
   loading: false,
-  songDurations: {}
+  error: null,
+  songDurations: {},
+  randomOrder: []
 };
+
+const MusicContext = createContext<{
+  state: MusicState;
+  dispatch: React.Dispatch<MusicAction>;
+}>({
+  state: initialState,
+  dispatch: () => null
+});
 
 const musicReducer = (state: MusicState, action: MusicAction): MusicState => {
   switch (action.type) {
@@ -94,16 +110,16 @@ const musicReducer = (state: MusicState, action: MusicAction): MusicState => {
       return { ...state, volume: action.payload };
     case 'SET_PLAY_MODE':
       return { ...state, playMode: action.payload };
-    case 'SET_RANDOM_ORDER':
-      return { ...state, randomOrder: action.payload };
     case 'TOGGLE_PLAYLIST':
       return { ...state, showPlaylist: !state.showPlaylist };
     case 'SET_CURRENT_VIEW':
       return { ...state, currentView: action.payload };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload };
+    case 'SET_CONTROL_LAYOUT':
+      return { ...state, controlLayout: action.payload };
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload };
     case 'SET_SONG_DURATION':
       return {
         ...state,
@@ -112,20 +128,26 @@ const musicReducer = (state: MusicState, action: MusicAction): MusicState => {
           [action.payload.url]: action.payload.duration
         }
       };
+    case 'SET_RANDOM_ORDER':
+      return { ...state, randomOrder: action.payload };
     default:
       return state;
   }
 };
 
-interface MusicContextType {
-  state: MusicState;
-  dispatch: React.Dispatch<MusicAction>;
+interface MusicProviderProps {
+  children: ReactNode;
+  initialLayout?: ControlLayout;
 }
 
-const MusicContext = createContext<MusicContextType | undefined>(undefined);
-
-export const MusicProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(musicReducer, initialState);
+export const MusicProvider: React.FC<MusicProviderProps> = ({
+  children,
+  initialLayout = 'normal'
+}) => {
+  const [state, dispatch] = useReducer(musicReducer, {
+    ...initialState,
+    controlLayout: initialLayout
+  });
 
   return (
     <MusicContext.Provider value={{ state, dispatch }}>
@@ -134,11 +156,5 @@ export const MusicProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   );
 };
 
-export const useMusicContext = () => {
-  const context = useContext(MusicContext);
-  if (context === undefined) {
-    throw new Error('useMusicContext must be used within a MusicProvider');
-  }
-  return context;
-};
+export const useMusicContext = () => useContext(MusicContext);
 

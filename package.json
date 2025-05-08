@@ -1,7 +1,7 @@
 {
   "name": "docusaurus-player",
   "private": false,
-  "version": "1.0.0-beta.9",
+  "version": "1.0.0-beta.10",
   "type": "module",
   "description": "A beautiful and powerful React music player component for Docusaurus",
   "author": "xm1769315774",

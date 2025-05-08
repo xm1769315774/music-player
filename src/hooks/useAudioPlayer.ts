@@ -1,8 +1,22 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { useMusicContext } from '../contexts/MusicContext';
 
-export const useAudioPlayer = (autoplay = false) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
+interface UseAudioPlayerReturn {
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+  togglePlay: () => void;
+  playNext: () => void;
+  playPrev: () => void;
+  handleSeek: (time: number) => void;
+  handleVolumeChange: (volumeOrEvent: number | React.ChangeEvent<HTMLInputElement>) => void;
+  handleTimeUpdate: () => void;
+  handleLoadedMetadata: () => void;
+  handleEnded: () => void;
+  switchToSong: (index: number) => void;
+  retryPlay: () => void;
+}
+
+export const useAudioPlayer = (autoplay = false): UseAudioPlayerReturn => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { state, dispatch } = useMusicContext();
   const { playlist, currentIndex, playing, playMode, randomOrder } = state;
   const isFirstLoad = useRef(true);
@@ -12,6 +26,11 @@ export const useAudioPlayer = (autoplay = false) => {
     dispatch({ type: 'SET_PLAYING', payload: false });
     dispatch({ type: 'SET_ERROR', payload: '音频加载失败，点击重试' });
     dispatch({ type: 'SET_LOADING', payload: false });
+    // 尝试自动播放下一首
+    if (playMode !== 'single') {
+      const nextIndex = (currentIndex + 1) % playlist.length;
+      switchToSong(nextIndex);
+    }
   }, [dispatch]);
 
   const playAudio = useCallback(async () => {
@@ -296,8 +315,9 @@ export const useAudioPlayer = (autoplay = false) => {
     }
   }, [dispatch]);
 
-  const handleVolumeChange = useCallback((volume: number) => {
+  const handleVolumeChange = useCallback((volumeOrEvent: number | React.ChangeEvent<HTMLInputElement>) => {
     if (audioRef.current) {
+      const volume = typeof volumeOrEvent === 'number' ? volumeOrEvent : parseFloat(volumeOrEvent.target.value);
       audioRef.current.volume = volume;
       dispatch({ type: 'SET_VOLUME', payload: volume });
     }

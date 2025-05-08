@@ -9,8 +9,12 @@
 - 📱 响应式设计，支持移动端
 - 🎨 可自定义主题颜色
 - 📋 支持播放列表管理
-- 🔊 音量控制
+- �� 音量控制
 - ⌨️ 键盘快捷键支持
+- 🎮 支持悬浮球模式
+- ⏱️ 播放进度记忆
+- 📊 播放历史记录
+- ⚡ 播放速度控制
 
 ## 安装
 
@@ -23,6 +27,8 @@ pnpm add docusaurus-player@beta
 ```
 
 ## 使用
+
+### 基础用法
 
 ```jsx
 import { MusicPlayer, MusicProvider } from 'docusaurus-player';
@@ -61,6 +67,72 @@ const App = () => {
 export default App;
 ```
 
+### 高级用法
+
+```jsx
+import { MusicPlayer, MusicProvider } from 'docusaurus-player';
+
+const App = () => {
+  const playlist = [
+    {
+      name: '歌曲名称',
+      artist: '艺术家',
+      url: '音频文件URL',
+      cover: '封面图片URL',
+      lrc: '歌词字符串',
+      theme: '#2196f3'
+    }
+  ];
+
+  const handlePlay = (song) => {
+    console.log('开始播放:', song);
+  };
+
+  const handlePause = () => {
+    console.log('暂停播放');
+  };
+
+  const handleEnded = () => {
+    console.log('播放结束');
+  };
+
+  const handleTimeUpdate = (currentTime, duration) => {
+    console.log('播放进度:', currentTime, duration);
+  };
+
+  const handleVolumeChange = (volume) => {
+    console.log('音量变化:', volume);
+  };
+
+  const handlePlayModeChange = (mode) => {
+    console.log('播放模式变化:', mode);
+  };
+
+  const handleLayoutChange = (layout) => {
+    console.log('布局变化:', layout);
+  };
+
+  return (
+    <MusicProvider>
+      <MusicPlayer
+        audio={playlist}
+        autoplay={true}
+        initialLayout="floating"
+        onPlay={handlePlay}
+        onPause={handlePause}
+        onEnded={handleEnded}
+        onTimeUpdate={handleTimeUpdate}
+        onVolumeChange={handleVolumeChange}
+        onPlayModeChange={handlePlayModeChange}
+        onLayoutChange={handleLayoutChange}
+      />
+    </MusicProvider>
+  );
+};
+
+export default App;
+```
+
 ## API
 
 ### MusicPlayer Props
@@ -77,6 +149,33 @@ export default App;
 | loop | 循环模式 | 'all' / 'one' / 'none' | 'all' |
 | order | 播放顺序 | 'list' / 'random' | 'list' |
 | preload | 音频预加载模式 | 'auto' / 'metadata' / 'none' | 'auto' |
+| initialLayout | 初始布局模式 | 'normal' / 'floating' | 'normal' |
+
+### 回调函数
+
+| 参数 | 说明 | 类型 |
+| --- | --- | --- |
+| onPlay | 开始播放时触发 | (song: Song) => void |
+| onPause | 暂停播放时触发 | () => void |
+| onEnded | 播放结束时触发 | () => void |
+| onTimeUpdate | 播放进度更新时触发 | (currentTime: number, duration: number) => void |
+| onVolumeChange | 音量变化时触发 | (volume: number) => void |
+| onPlayModeChange | 播放模式变化时触发 | (mode: PlayMode) => void |
+| onLayoutChange | 布局模式变化时触发 | (layout: ControlLayout) => void |
+
+### 键盘快捷键
+
+| 快捷键 | 功能 |
+| --- | --- |
+| Space | 播放/暂停 |
+| → | 下一首 |
+| ← | 上一首 |
+| ↑ | 增加音量 |
+| ↓ | 减少音量 |
+| M | 静音/取消静音 |
+| L | 切换播放模式 |
+| P | 显示/隐藏播放列表 |
+| F | 切换布局模式 |
 
 ### audio 数组项属性
 
@@ -90,6 +189,16 @@ export default App;
 | theme | 音频对应的主题色 | string | 否 |
 
 ## 更新日志
+
+### 1.0.0-beta.8
+
+- 添加键盘快捷键支持
+- 添加播放进度记忆功能
+- 添加播放历史记录功能
+- 添加播放速度控制功能
+- 优化悬浮球模式交互体验
+- 修复类型比较问题
+- 完善文档和示例
 
 ### 1.0.0-beta.7
 
