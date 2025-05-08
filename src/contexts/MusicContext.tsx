@@ -75,7 +75,7 @@ const initialState: MusicState = {
   playing: false,
   currentTime: 0,
   duration: 0,
-  volume: 1,
+  volume: 0.5,
   playMode: 'list',
   showPlaylist: false,
   currentView: 'cover',

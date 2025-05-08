@@ -26,11 +26,6 @@ export const useAudioPlayer = (autoplay = false): UseAudioPlayerReturn => {
     dispatch({ type: 'SET_PLAYING', payload: false });
     dispatch({ type: 'SET_ERROR', payload: '音频加载失败，点击重试' });
     dispatch({ type: 'SET_LOADING', payload: false });
-    // 尝试自动播放下一首
-    if (playMode !== 'single') {
-      const nextIndex = (currentIndex + 1) % playlist.length;
-      switchToSong(nextIndex);
-    }
   }, [dispatch]);
 
   const playAudio = useCallback(async () => {
@@ -218,6 +213,7 @@ export const useAudioPlayer = (autoplay = false): UseAudioPlayerReturn => {
   }, [dispatch]);
 
   const switchToSong = useCallback((targetIndex: number) => {
+    if (targetIndex < 0 || targetIndex >= playlist.length) return;
     if (audioRef.current) {
       const oldAudio = audioRef.current;
       oldAudio.pause();
@@ -226,13 +222,18 @@ export const useAudioPlayer = (autoplay = false): UseAudioPlayerReturn => {
       oldAudio.removeEventListener('ended', handleEnded);
       oldAudio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       oldAudio.load();
-
+      // 重置状态
+      dispatch({ type: 'SET_ERROR', payload: null });
       dispatch({ type: 'SET_PLAYING', payload: false });
+      dispatch({ type: 'SET_CURRENT_TIME', payload: 0 }); // 确保从头开始播放
+      dispatch({ type: 'SET_DURATION', payload: 0 });
+
+      // 设置新的索引和加载状态
       dispatch({ type: 'SET_CURRENT_INDEX', payload: targetIndex });
       dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
 
-      oldAudio.volume = state.volume;
+      oldAudio.volume = state.volume;// 保持用户设置的音量
+      oldAudio.currentTime = 0;// 确保从头开始播放
       oldAudio.preload = 'auto';
       oldAudio.src = playlist[targetIndex].url;
 

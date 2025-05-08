@@ -69,6 +69,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
     currentView,
     controlLayout
   } = state;
+  const isFirstLoadRef = useRef(true);
 
   const {
     audioRef,
@@ -400,12 +401,13 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
     // 加载保存的播放进度
     const loadProgress = () => {
       const savedProgress = localStorage.getItem('musicPlayerProgress');
-      if (savedProgress && audioRef.current) {
+      if (savedProgress && audioRef.current && isFirstLoadRef.current) {
         const { currentTime, currentIndex: savedIndex, volume: savedVolume } = JSON.parse(savedProgress);
         if (savedIndex === currentIndex) {
           audioRef.current.currentTime = currentTime;
           handleVolumeChangeWithCallback(savedVolume);
         }
+        isFirstLoadRef.current = false; // 标记已经不是首次加载
       }
     };
 
