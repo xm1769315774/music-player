@@ -33,9 +33,7 @@ const normalizeSong = (song: Song): NormalizedSong => ({
 
 export type PlayMode = 'list' | 'random' | 'single';
 
-const CONTROL_LAYOUTS = ['normal', 'floating'] as const;
-export type ControlLayout = (typeof CONTROL_LAYOUTS)[number];
-
+export type ControlLayout = 'normal' | 'floating';
 interface MusicState {
   playlist: NormalizedSong[];
   currentIndex: number;
@@ -61,7 +59,7 @@ type MusicAction =
   | { type: 'SET_DURATION'; payload: number }
   | { type: 'SET_VOLUME'; payload: number }
   | { type: 'SET_PLAY_MODE'; payload: PlayMode }
-  | { type: 'TOGGLE_PLAYLIST' }
+  | { type: 'TOGGLE_PLAYLIST'; payload?: boolean }
   | { type: 'SET_CURRENT_VIEW'; payload: 'cover' | 'lyrics' }
   | { type: 'SET_CONTROL_LAYOUT'; payload: ControlLayout }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -111,7 +109,7 @@ const musicReducer = (state: MusicState, action: MusicAction): MusicState => {
     case 'SET_PLAY_MODE':
       return { ...state, playMode: action.payload };
     case 'TOGGLE_PLAYLIST':
-      return { ...state, showPlaylist: !state.showPlaylist };
+      return { ...state, showPlaylist: action.payload !== undefined ? action.payload : !state.showPlaylist };
     case 'SET_CURRENT_VIEW':
       return { ...state, currentView: action.payload };
     case 'SET_CONTROL_LAYOUT':

@@ -151,7 +151,10 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
   const toggleControlLayout = useCallback(() => {
     const newLayout: ControlLayout = controlLayout === 'normal' ? 'floating' : 'normal';
+    // 切换布局时重置相关状态
     dispatch({ type: 'SET_CONTROL_LAYOUT', payload: newLayout });
+    dispatch({ type: 'TOGGLE_PLAYLIST', payload: false }); // 关闭播放列表
+    setIsFloatingControlExpanded(false); // 关闭悬浮控制面板的展开状态
     if (onLayoutChange) {
       onLayoutChange(newLayout);
     }
@@ -315,13 +318,6 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
       onVolumeChange(volume);
     }
   }, [handleVolumeChangeFromHook, onVolumeChange]);
-
-  const handlePlayModeChangeWithCallback = useCallback((mode: PlayMode) => {
-    dispatch({ type: 'SET_PLAY_MODE', payload: mode });
-    if (onPlayModeChange) {
-      onPlayModeChange(mode);
-    }
-  }, [dispatch, onPlayModeChange]);
 
   const handlePlayClick = useCallback(() => {
     togglePlay();
@@ -991,9 +987,9 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
                       <button
                         onClick={toggleControlLayout}
                         className="text-[#8A8A9A] hover:bg-gradient-to-r from-purple-500 to-pink-500 hover:text-white transition-colors p-2 rounded-full"
-                        title={controlLayout === 'normal' ? '切换到悬浮球模式' : '切换到普通模式'}
+                        title={controlLayout as ControlLayout === 'normal' ? '切换到悬浮球模式' : '切换到普通模式'}
                       >
-                        {controlLayout === 'normal' ? (
+                        {controlLayout as ControlLayout === 'normal' ? (
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                           </svg>
