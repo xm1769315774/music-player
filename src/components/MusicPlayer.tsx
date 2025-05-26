@@ -4,6 +4,7 @@ import ProgressBar from './ProgressBar';
 import VolumeControl from './VolumeControl';
 import Lyrics from './Lyrics';
 import { useMusicContext, PlayMode, ControlLayout } from '@/contexts/MusicContext';
+import defaultCover from '@/assets/default-cover.jpg';
 
 interface MusicPlayerProps {
   audio?: {
@@ -534,7 +535,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
   }, [currentIndex, playing, state.playlist]);
 
   const [imageLoadError, setImageLoadError] = useState<{ [key: string]: boolean }>({});
-  const defaultCoverUrl = '/src/assets/default-cover.jpg';
+  const defaultCoverUrl = defaultCover;
 
   const handleImageError = useCallback((coverUrl: string) => {
     if (coverUrl && coverUrl !== defaultCoverUrl) {
