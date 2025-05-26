@@ -6,6 +6,7 @@ import dts from 'vite-plugin-dts'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js'
+import path from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -67,5 +68,10 @@ export default defineConfig({
         }
       }
     }
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
   },
 })

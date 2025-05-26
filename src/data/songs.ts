@@ -17,7 +17,7 @@ export const songs: Song[] = [
     title: "蝉（2022年CCTV3星光大道）（Live）",
     author: "戴林港",
     url: "https://api.i-meto.com/meting/api?server=netease&type=url&id=2013978728&auth=39a93be20c13c1ae4e8b9fbd2df021435556106a",
-    pic: "https://api.i-meto.com/meting/api?server=netease&type=pic&id=109951168229237090&auth=a57ed0df2f60e735cc8345f41e18475988599949",
+    pic: "https://api.i-meto.com/meting/api?server=netease&type=pic&id=109951168229237090&auth=a57ed0df2f60e735cc8345f41e184759885999491",
     lrc: "https://api.i-meto.com/meting/api?server=netease&type=lrc&id=2013978728&auth=96a8b036d3476be1c7b37dbf37174308b9fcecc1"
   },
   {

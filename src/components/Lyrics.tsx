@@ -62,9 +62,18 @@ export const Lyrics: React.FC<LyricsProps> = ({ lrc, currentTime, className = ''
         if (lyricsRef.current && index !== -1) {
           const lineElements = lyricsRef.current.children[0].children;
           if (lineElements[index]) {
-            lineElements[index].scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
+            const container = lyricsRef.current;
+            const targetElement = lineElements[index] as HTMLElement;
+            const containerRect = container.getBoundingClientRect();
+            const targetRect = targetElement.getBoundingClientRect();
+
+            // 计算目标元素相对于容器的位置
+            const scrollTop = targetElement.offsetTop - container.offsetTop - (containerRect.height / 2) + (targetRect.height / 2);
+
+            // 使用 scrollTo 进行平滑滚动
+            container.scrollTo({
+              top: scrollTop,
+              behavior: 'smooth'
             });
           }
         }
